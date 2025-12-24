@@ -305,16 +305,13 @@
 
         // Normalize arrays to an object with `output`
         if (Array.isArray(data)) {
-          // If array of strings, join them; otherwise stringify
-          if (data.every(item => typeof item === 'string')) {
-            data = { output: data.join('\n') };
-          } else {
-            data = { output: JSON.stringify(data) };
-          }
+          // Wrap arrays inside an object so the frontend always receives a JSON object
+          data = { output: data };
         } else if (typeof data === 'object' && data !== null) {
           // keep object as-is
         } else {
-          data = { output: String(data) };
+          // Wrap primitives inside an object as well
+          data = { output: data };
         }
       } else {
         data = { output: 'Server returned empty body. Check your webhook / Respond to Webhook node.' };
