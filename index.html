@@ -286,20 +286,22 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, sessionId, file_id: currentFileId })
         });
-        if (!res.ok) throw new Error(`Chat failed (${res.status})`);
-        
-        // Get response text to debug
+
+        console.log('Chat status:', res.status, res.statusText);
         const responseText = await res.text();
-        console.log('Chat response:', responseText);
-        
-        // Handle empty response
+        console.log('Chat response body:', responseText);
+        console.log('Chat response headers:', [...res.headers.entries()]);
+
+        if (!res.ok) throw new Error(`Chat failed (${res.status}) - ${res.statusText}`);
+
         let data = {};
         if (responseText && responseText.trim()) {
-          data = JSON.parse(responseText);
+          try { data = JSON.parse(responseText); }
+          catch (e) { data = { output: responseText }; }
         } else {
-          data = { output: 'I received your message but got no response from the server. Please check your webhook.' };
+          data = { output: 'Server returned empty body. Check your webhook / Respond to Webhook node.' };
         }
-        
+
         const reply = data.output || data.text || data.response || JSON.stringify(data) || 'No response received';
         updateMessage(loadingId, reply);
       } catch (err) {
