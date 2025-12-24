@@ -228,7 +228,7 @@
       return styles.getPropertyValue(`--${name}`) || '#9ca3af';
     }
 
-        async function handleUpload(file) {
+     async function handleUpload(file) {
       setStatus(`Uploading ${file.name}...`, varColor('text'));
       toggleSend(true);
 
@@ -241,8 +241,18 @@
           body: formData,
           mode: 'cors'
         });
+        
+        // Check HTTP status first
         if (!res.ok) throw new Error(`Upload failed (${res.status}) - ${res.statusText}`);
-        const result = await res.json();
+        
+        // Get response text to debug
+        const text = await res.text();
+        console.log('Raw response:', text);
+        
+        // Parse only if text is not empty
+        if (!text) throw new Error('Server returned empty response');
+        const result = JSON.parse(text);
+        
         currentFileId = result.file_id || file.name.replace(/\s/g, '_');
         setStatus('✓ Document indexed', '#22c55e');
         addMessage('bot', `I've indexed **${file.name}**. Ask me anything about it.`);
