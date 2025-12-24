@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Assistant</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #0c1220;
+      --panel: #0f172a;
+      --card: #111827;
+      --muted: #9ca3af;
+      --text: #e5e7eb;
+      --accent: #22c55e;
+      --accent-2: #3b82f6;
+      --border: #1f2937;
+      --shadow: 0 16px 40px rgba(0,0,0,0.35);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex; flex-direction: column;
+      background: radial-gradient(circle at 20% 20%, rgba(59,130,246,0.08), transparent 30%),
+                  radial-gradient(circle at 80% 10%, rgba(34,197,94,0.10), transparent 25%),
+                  var(--bg);
+    }
+
+    header {
+      height: 68px; padding: 0 26px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #162036; background: rgba(12,18,32,0.8); backdrop-filter: blur(10px);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.1px;
+    }
+    .logo {
+      width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; color: #0b1223;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: var(--shadow);
+    }
+    .tag {
+      padding: 7px 12px; border-radius: 999px; border: 1px solid #1f2937; background: #0c1529; color: var(--muted);
+      font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.18);
+    }
+
+    main {
+      flex: 1; display: grid; grid-template-columns: 320px 1fr; min-height: 0;
+    }
+
+    .side {
+      padding: 24px; border-right: 1px solid #162036; background: var(--panel);
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 8px 0; font-size: 1rem; }
+    .card p { margin: 0 0 10px 0; color: var(--muted); font-size: 0.95rem; }
+
+    .dropzone {
+      border: 1.5px dashed #2f3b55; border-radius: 14px; padding: 14px; text-align: center;
+      background: rgba(255,255,255,0.02); color: var(--muted); transition: border-color 0.2s, background 0.2s, color 0.2s;
+      margin-bottom: 12px;
+    }
+    .dropzone.active { border-color: var(--accent-2); background: rgba(59,130,246,0.10); color: #dbeafe; }
+
+    .upload-btn {
+      width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #2b3448;
+      background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(34,197,94,0.18));
+      color: var(--text); cursor: pointer; font-weight: 600; display: inline-flex; justify-content: center; gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .upload-btn:hover { border-color: var(--accent-2); transform: translateY(-1px); }
+    .status { min-height: 20px; font-size: 0.93rem; color: var(--muted); }
+
+    .helper {
+      display: grid; gap: 10px; font-size: 0.95rem; color: var(--muted);
+    }
+    .pill {
+      border: 1px solid #1f2937; border-radius: 12px; padding: 10px 12px; background: #0c1529; color: var(--text);
+    }
+
+    .workspace {
+      display: flex; flex-direction: column; min-height: 0; background: transparent;
+    }
+    .chat {
+      flex: 1; overflow: auto; padding: 26px; display: flex; flex-direction: column; gap: 14px;
+    }
+    .msg {
+      display: flex; gap: 12px; align-items: flex-start; max-width: 980px;
+    }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 700;
+      border: 1px solid #1f2937;
+    }
+    .bot .avatar { background: #22c55e1a; color: #7df3b1; border-color: #22c55e40; }
+    .user .avatar { background: #3b82f61a; color: #9dc7ff; border-color: #3b82f640; }
+    .bubble {
+      flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px 16px; box-shadow: var(--shadow); color: var(--text); line-height: 1.55;
+    }
+    .bot .bubble { border-color: #22c55e30; }
+    .user .bubble { border-color: #3b82f630; }
+
+    .input-wrap {
+      border-top: 1px solid #162036; background: rgba(11,18,32,0.92); backdrop-filter: blur(10px); padding: 16px 20px;
+    }
+    .input-box {
+      max-width: 980px; margin: 0 auto; display: flex; gap: 10px; align-items: center;
+      background: var(--panel); border: 1px solid #1f2937; border-radius: 14px; padding: 10px 12px; box-shadow: var(--shadow);
+    }
+    .input-box input {
+      flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem;
+    }
+    .send-btn {
+      background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #0b1223; border: none;
+      border-radius: 12px; padding: 10px 14px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow);
+      transition: transform 0.15s ease, opacity 0.2s ease;
+    }
+    .send-btn[disabled] { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .send-btn:hover:not([disabled]) { transform: translateY(-1px); }
+
+    .typing { color: var(--muted); font-style: italic; }
+
+    @media (max-width: 1024px) {
+      main { grid-template-columns: 1fr; }
+      .side { order: 2; }
+      .workspace { order: 1; }
+    }
+    @media (max-width: 600px) {
+      header { padding: 0 16px; }
+      .chat { padding: 18px; }
+      .input-wrap { padding: 12px 14px; }
+      .side { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">AI</div>
+      <div>Document Assistant</div>
+    </div>
+    <div class="tag"><span class="dot"></span> Ready</div>
+  </header>
+
+  <main>
+    <aside class="side">
+      <div class="card">
+        <h3>Upload document</h3>
+        <p>PDF, CSV, or TXT. We'll index it so you can ask targeted questions.</p>
+        <input type="file" id="fileInput" style="display:none" accept=".pdf,.csv,.txt" />
+        <div class="dropzone" id="dropHint">Drag & drop a file, or pick from your device.</div>
+        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">＋ Choose a file</button>
+        <div class="status" id="uploadStatus"></div>
+      </div>
+
+      <div class="card helper">
+        <div class="pill">Ask clarifying questions.</div>
+        <div class="pill">Follow up without re-uploading.</div>
+        <div class="pill">Session remembered while open.</div>
+        <div class="pill">Vector search + Gemini answers.</div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="chat" id="chatHistory">
+        <div class="msg bot">
+          <div class="avatar">AI</div>
+          <div class="bubble">Hi! Upload a document to get started, then ask me anything about it.</div>
+        </div>
+      </div>
+
+      <div class="input-wrap">
+        <div class="input-box">
+          <input type="text" id="userInput" placeholder="Ask a question about your document..." onkeydown="if(event.key==='Enter') sendMessage()" />
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- CONFIG: Update to your deployed webhook URLs if different ---
+    const UPLOAD_WEBHOOK_URL = 'https://jainamshah2110.app.n8n.cloud/webhook/upload-document';
+    const CHAT_WEBHOOK_URL   = 'https://jainamshah2110.app.n8n.cloud/webhook/chat-endpoint';
+
+    let currentFileId = null;
+    let sessionId = 'session_' + Math.random().toString(36).slice(2, 11);
+
+    const statusEl = document.getElementById('uploadStatus');
+    const sendBtn = document.getElementById('sendBtn');
+    const dropzone = document.getElementById('dropHint');
+    const fileInput = document.getElementById('fileInput');
+
+    // Dropzone behavior
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('active'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('active'); });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file) handleUpload(file);
+    });
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleUpload(file);
+    });
+
+    function setStatus(text, color = varColor('muted')) {
+      statusEl.textContent = text || '';
+      statusEl.style.color = color;
+    }
+
+    function varColor(name) {
+      const styles = getComputedStyle(document.documentElement);
+      return styles.getPropertyValue(`--${name}`) || '#9ca3af';
+    }
+
+    async function handleUpload(file) {
+      setStatus(`Uploading ${file.name}...`, varColor('text'));
+      toggleSend(true);
+
+      const formData = new FormData();
+      formData.append('data', file);
+
+      try {
+        const res = await fetch(UPLOAD_WEBHOOK_URL, { method: 'POST', body: formData });
+        if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+        const result = await res.json();
+        currentFileId = result.file_id || file.name.replace(/\s/g, '_');
+        setStatus('✓ Document indexed', '#22c55e');
+        addMessage('bot', `I've indexed **${file.name}**. Ask me anything about it.`);
+      } catch (err) {
+        console.error(err);
+        setStatus('Error uploading. Check network/CORS.', '#f87171');
+      } finally {
+        toggleSend(false);
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      toggleSend(true);
+
+      addMessage('user', text);
+      const loadingId = addMessage('bot', '<span class="typing">Thinking...</span>', true);
+
+      try {
+        const res = await fetch(CHAT_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, sessionId, file_id: currentFileId })
+        });
+        if (!res.ok) throw new Error(`Chat failed (${res.status})`);
+        const data = await res.json();
+        const reply = data.output || data.text || JSON.stringify(data);
+        updateMessage(loadingId, reply);
+      } catch (err) {
+        console.error(err);
+        updateMessage(loadingId, 'Error connecting to AI. Please try again.');
+      } finally {
+        toggleSend(false);
+      }
+    }
+
+    function toggleSend(disabled) {
+      sendBtn.disabled = disabled;
+      sendBtn.textContent = disabled ? 'Working…' : 'Send';
+    }
+
+    function addMessage(sender, text, asHTML = false) {
+      const history = document.getElementById('chatHistory');
+      const msg = document.createElement('div');
+      msg.className = `msg ${sender}`;
+      msg.id = `msg-${Date.now()}`;
+      msg.innerHTML = `
+        <div class="avatar">${sender === 'bot' ? 'AI' : 'U'}</div>
+        <div class="bubble">${asHTML ? text : escapeHtml(text)}</div>
+      `;
+      history.appendChild(msg);
+      history.scrollTop = history.scrollHeight;
+      return msg.id;
+    }
+
+    function updateMessage(id, newText) {
+      const msg = document.getElementById(id);
+      if (!msg) return;
+      const bubble = msg.querySelector('.bubble');
+      bubble.textContent = newText;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[m]));
+    }
+  </script>
+</body>
+</html>
