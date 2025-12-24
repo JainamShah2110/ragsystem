@@ -287,12 +287,24 @@
           body: JSON.stringify({ message: text, sessionId, file_id: currentFileId })
         });
         if (!res.ok) throw new Error(`Chat failed (${res.status})`);
-        const data = await res.json();
-        const reply = data.output || data.text || JSON.stringify(data);
+        
+        // Get response text to debug
+        const responseText = await res.text();
+        console.log('Chat response:', responseText);
+        
+        // Handle empty response
+        let data = {};
+        if (responseText && responseText.trim()) {
+          data = JSON.parse(responseText);
+        } else {
+          data = { output: 'I received your message but got no response from the server. Please check your webhook.' };
+        }
+        
+        const reply = data.output || data.text || data.response || JSON.stringify(data) || 'No response received';
         updateMessage(loadingId, reply);
       } catch (err) {
         console.error(err);
-        updateMessage(loadingId, 'Error connecting to AI. Please try again.');
+        updateMessage(loadingId, `Error: ${err.message}`);
       } finally {
         toggleSend(false);
       }
