@@ -281,35 +281,53 @@
       const loadingId = addMessage('bot', '<span class="typing">Thinking...</span>', true);
 
       try {
-        const res = await fetch(CHAT_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text, sessionId, file_id: currentFileId })
-        });
+      const res = await fetch(CHAT_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, sessionId, file_id: currentFileId })
+      });
 
-        console.log('Chat status:', res.status, res.statusText);
-        const responseText = await res.json();
-        console.log('Chat response body:', responseText);
-        console.log('Chat response headers:', [...res.headers.entries()]);
+      console.log('Chat status:', res.status, res.statusText);
+      const responseText = await res.text();
+      console.log('Chat response body:', responseText);
+      console.log('Chat response headers:', [...res.headers.entries()]);
 
-        if (!res.ok) throw new Error(`Chat failed (${res.status}) - ${res.statusText}`);
+      if (!res.ok) throw new Error(`Chat failed (${res.status}) - ${res.statusText}`);
 
-        let data = {};
-        if (responseText && responseText.trim()) {
-          try { data = JSON.parse(responseText); }
-          catch (e) { data = { output: responseText }; }
-        } else {
-          data = { output: 'Server returned empty body. Check your webhook / Respond to Webhook node.' };
+      let data = {};
+      if (responseText && responseText.trim()) {
+        try {
+          data = JSON.parse(responseText);
+        } catch (e) {
+          // not JSON -> show raw text
+          data = responseText;
         }
 
-        const reply = data.output || data.text || data.response || JSON.stringify(data) || 'No response received';
-        updateMessage(loadingId, reply);
-      } catch (err) {
-        console.error(err);
-        updateMessage(loadingId, `Error: ${err.message}`);
-      } finally {
-        toggleSend(false);
+        // Normalize arrays to an object with `output`
+        if (Array.isArray(data)) {
+          // If array of strings, join them; otherwise stringify
+          if (data.every(item => typeof item === 'string')) {
+            data = { output: data.join('\n') };
+          } else {
+            data = { output: JSON.stringify(data) };
+          }
+        } else if (typeof data === 'object' && data !== null) {
+          // keep object as-is
+        } else {
+          data = { output: String(data) };
+        }
+      } else {
+        data = { output: 'Server returned empty body. Check your webhook / Respond to Webhook node.' };
       }
+
+      const reply = data.output || data.text || data.response || JSON.stringify(data) || 'No response received';
+      updateMessage(loadingId, reply);
+    } catch (err) {
+      console.error(err);
+      updateMessage(loadingId, `Error: ${err.message}`);
+    } finally {
+      toggleSend(false);
+    }
     }
 
     function toggleSend(disabled) {
