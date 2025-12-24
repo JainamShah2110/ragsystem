@@ -288,7 +288,7 @@
         });
 
         console.log('Chat status:', res.status, res.statusText);
-        const responseText = await res.text();
+        const responseText = await res.json();
         console.log('Chat response body:', responseText);
         console.log('Chat response headers:', [...res.headers.entries()]);
 
