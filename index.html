@@ -245,13 +245,18 @@
         // Check HTTP status first
         if (!res.ok) throw new Error(`Upload failed (${res.status}) - ${res.statusText}`);
         
-        // Get response text to debug
+        // Get response text
         const text = await res.text();
         console.log('Raw response:', text);
         
-        // Parse only if text is not empty
-        if (!text) throw new Error('Server returned empty response');
-        const result = JSON.parse(text);
+        // Parse JSON only if response has content
+        let result = {};
+        if (text && text.trim()) {
+          result = JSON.parse(text);
+        } else {
+          // Handle empty response - assume success if HTTP 200
+          result = { file_id: file.name.replace(/\s/g, '_') };
+        }
         
         currentFileId = result.file_id || file.name.replace(/\s/g, '_');
         setStatus('✓ Document indexed', '#22c55e');
