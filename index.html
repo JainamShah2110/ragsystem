@@ -228,7 +228,7 @@
       return styles.getPropertyValue(`--${name}`) || '#9ca3af';
     }
 
-    async function handleUpload(file) {
+        async function handleUpload(file) {
       setStatus(`Uploading ${file.name}...`, varColor('text'));
       toggleSend(true);
 
@@ -236,15 +236,20 @@
       formData.append('data', file);
 
       try {
-        const res = await fetch(UPLOAD_WEBHOOK_URL, { method: 'POST', body: formData });
-        if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+        const res = await fetch(UPLOAD_WEBHOOK_URL, { 
+          method: 'POST', 
+          body: formData,
+          mode: 'cors'
+        });
+        if (!res.ok) throw new Error(`Upload failed (${res.status}) - ${res.statusText}`);
         const result = await res.json();
         currentFileId = result.file_id || file.name.replace(/\s/g, '_');
         setStatus('✓ Document indexed', '#22c55e');
         addMessage('bot', `I've indexed **${file.name}**. Ask me anything about it.`);
       } catch (err) {
-        console.error(err);
-        setStatus('Error uploading. Check network/CORS.', '#f87171');
+        console.error('Upload Error:', err);
+        setStatus(`Error: ${err.message}`, '#f87171');
+        addMessage('bot', `Upload failed: ${err.message}`);
       } finally {
         toggleSend(false);
       }
